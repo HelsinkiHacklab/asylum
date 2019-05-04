@@ -67,7 +67,8 @@ class ApplicationHandler(BaseApplicationHandler):
             if rest_of_year_free:
                 rt.start = datetime.date(year=application.received.year + 1, month=1, day=1)
             rt.save()
-            rt.conditional_add_transaction()
+            # Skip this, 1. speed 2. if it fails due to holvi bullshittery we can't approve members...
+            # rt.conditional_add_transaction()
 
         # Subscribe to mailing list
         mailman_subscribe = env('HHL_MAILMAN_SUBSCRIBE', default=None)
