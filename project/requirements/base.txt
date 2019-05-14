@@ -41,7 +41,7 @@ django-markdown==0.8.4
 django-settings-export==1.2.1
 python-dateutil==2.6.0
 holviapi>=0.6.20190131
-holvirc>=0.3.20190131
+holvirc>=0.3.20190209
 
 # HHL local deps
 slacker==0.9.50
