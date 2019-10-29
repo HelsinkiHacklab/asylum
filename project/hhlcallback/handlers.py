@@ -231,6 +231,9 @@ This payment information is valid until further notice, you will be sent notific
         return True
 
     def make_membershipfee_invoice(self, rt, t):
+        logger.warning('Holvi MFA enforcement broke this, not even trying to avoid execption')
+        return False  # FIXME when we have figured out a solution implement it.
+
         if env.bool('HHL_SKIP_HOLVI', False):
             return True
         HOLVI_CNC = get_holvi_connection()
