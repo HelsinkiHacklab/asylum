@@ -130,7 +130,8 @@ class RecurringTransactionsHolviHandler(BaseRecurringTransactionsHandler):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if not env.bool('HHL_SKIP_HOLVI', False):
+        # FIXME: after the MFA problem is fixed, re-enable this.
+        if False:  # not env.bool('HHL_SKIP_HOLVI', False):
             HOLVI_CNC = get_holvi_connection()
             if HOLVI_CNC:
                 caa = holvirc.CategoriesAPI(HOLVI_CNC)
