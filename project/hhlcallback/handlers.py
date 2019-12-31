@@ -135,9 +135,9 @@ class RecurringTransactionsHolviHandler(BaseRecurringTransactionsHandler):
         # Only negative amounts go to invoices
         if t.amount >= 0.0:
             return True
-        if t.tag.pk == 1:  # Membership feee
+        if int(t.tag.tmatch) == 1:  # Membership feee
             return self.send_membershipfee_email(rt, t)
-        if t.tag.pk == 2:  # Keyholder feee
+        if int(t.tag.tmatch) == 2:  # Keyholder feee
             return self.send_keyholder_fee_email(rt, t)
         return True
 
