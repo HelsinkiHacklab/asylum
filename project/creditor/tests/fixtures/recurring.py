@@ -36,8 +36,9 @@ class MembershipfeeFactory(RecurringTransactionFactory):
     amount = -28
     start = factory.LazyAttribute(lambda t: t.owner.accepted)
 
+
 class QuarterlyFactory(RecurringTransactionFactory):
-    tag = factory.SubFactory(TransactionTagFactory, label= 'Quarterly fee', tmatch='3')
+    tag = factory.SubFactory(TransactionTagFactory, label='Quarterly fee', tmatch='3')
     rtype = RecurringTransaction.QUARTERLY
     amount = amount = factory.fuzzy.FuzzyInteger(-40, -20, 10)
 

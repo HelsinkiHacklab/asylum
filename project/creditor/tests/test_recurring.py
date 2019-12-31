@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 import calendar
 import datetime
-from django.utils import timezone
 
 import pytest
 import pytz
 from creditor.tests.fixtures.recurring import KeyholderfeeFactory, MembershipfeeFactory, QuarterlyFactory
+from django.utils import timezone
 
 
 def year_start_end(timescope=None):
@@ -19,11 +19,11 @@ def year_start_end(timescope=None):
 def quarter_start_end(timescope=None):
     if timescope is None:
         timescope = datetime.datetime.now()
-    if timescope.month in range(1,4):
+    if timescope.month in range(1, 4):
         start = datetime.datetime(timescope.year, 1, 1).date()
-    elif timescope.month in range(4,7):
+    elif timescope.month in range(4, 7):
         start = datetime.datetime(timescope.year, 4, 1).date()
-    elif timescope.month in range(7,10):
+    elif timescope.month in range(7, 10):
         start = datetime.datetime(timescope.year, 7, 1).date()
     else:
         start = datetime.datetime(timescope.year, 10, 1).date()
@@ -106,6 +106,7 @@ def test_quarterly_in_scope_without_end():
     t = QuarterlyFactory(start=start, end=end)
     assert t.in_timescope(now)
 
+
 @pytest.mark.django_db
 def test_quarterly_not_in_scope_ended():
     now = timezone.now()
@@ -114,6 +115,7 @@ def test_quarterly_not_in_scope_ended():
     t = QuarterlyFactory(start=start, end=end)
     assert not t.in_timescope(now)
 
+
 @pytest.mark.django_db
 def test_quarterly_not_in_scope_notstarted():
     now = timezone.now()
@@ -121,6 +123,7 @@ def test_quarterly_not_in_scope_notstarted():
     start, end = month_start_end(now + datetime.timedelta(weeks=25))
     t = QuarterlyFactory(start=start, end=end)
     assert not t.in_timescope(now)
+
 
 @pytest.mark.django_db
 def test_monthly_in_scope_with_end():

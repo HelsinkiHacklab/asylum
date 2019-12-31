@@ -5,6 +5,7 @@ from django.conf import settings
 
 CONNECTION_SINGLETON = None
 
+
 def apikey_configured():
     """Check if we have apikey"""
     return bool(settings.HOLVI_POOL) and bool(settings.HOLVI_APIKEY)
