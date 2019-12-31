@@ -16,7 +16,7 @@ from holviapp.utils import get_connection as get_holvi_connection
 from members.handlers import BaseApplicationHandler, BaseMemberHandler
 from slacksync.utils import quick_invite
 
-from .utils import get_nordea_payment_reference
+from .utils import get_nordea_payment_reference, get_nordea_yearly_payment_reference
 
 logger = logging.getLogger('hhlcallback.handlers')
 env = environ.Env()
@@ -130,22 +130,13 @@ class RecurringTransactionsHolviHandler(BaseRecurringTransactionsHandler):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # FIXME: after the MFA problem is fixed, re-enable this.
-        if False:  # not env.bool('HHL_SKIP_HOLVI', False):
-            HOLVI_CNC = get_holvi_connection()
-            if HOLVI_CNC:
-                caa = holvirc.CategoriesAPI(HOLVI_CNC)
-                self.category_maps = {  # Keyed by tag pk
-                    1: caa.get_category('101ea72cbfadf52d4f7684a52bdb8947'),  # Membership feee
-                    2: caa.get_category('7ac3020b14d926e5f0c6fb005f0457ac'),  # Keyholder fee
-                }
 
     def on_creating(self, rt, t, *args, **kwargs):
         # Only negative amounts go to invoices
         if t.amount >= 0.0:
             return True
         if t.tag.pk == 1:  # Membership feee
-            return self.make_membershipfee_invoice(rt, t)
+            return self.send_membershipfee_email(rt, t)
         if t.tag.pk == 2:  # Keyholder feee
             return self.send_keyholder_fee_email(rt, t)
         return True
@@ -171,9 +162,9 @@ class RecurringTransactionsHolviHandler(BaseRecurringTransactionsHandler):
         mail.body = """
 (In English below)
 
-Tässä avainjäsenyyden maksutietosi Helsinki Hacklab ry:lle. Vuosijäsenmaksut ovat eri asia ja maksetaan eri viitteellä eri tilille.
+Tässä avainjäsenyyden maksutietosi Helsinki Hacklab ry:lle. Vuosijäsenmaksut ovat eri asia ja maksetaan eri viitteellä.
 
-Virtuaaliviivakoodi sisältää kaikki maksua koskevat tiedot, ja se on suositeltavin tapa syöttää maksutiedot oikein 
+Virtuaaliviivakoodi sisältää kaikki maksua koskevat tiedot, ja se on suositeltavin tapa syöttää maksutiedot oikein
 verkkopankkiisi. Muista tehdä maksusta kuukausittain toistuva. Verkkopankissa on jossain "lue viivakoodi" -tyyppinen nappi,
 paina siitä ja kopioi viivakoodin numerosarja annettuun kenttään.
 
@@ -183,7 +174,7 @@ Virtuaaliviivakoodisi:
 
 Maksaminen manuaalisesti tiedot syöttämällä.
 
-Ole huolellinen maksutietojen syöttämisessä, jos et käytä virtuaaliviivakoodia. Yhdistyksellä on kaksi eri tilinumeroa. 
+Ole huolellinen maksutietojen syöttämisessä, jos et käytä virtuaaliviivakoodia. Yhdistyksellä on kaksi eri tilinumeroa.
 Ole hyvä, ja varmista, että maksut siirtyvät Nordea-tilillemme viitteen kanssa. Jätä maksun viestikenttä tyhjäksi.
 
 Tilinumero: {iban}
@@ -197,9 +188,9 @@ Nämä maksutiedot ovat toistaiseksi voimassa ja niitä koskevat muutokset ilmoi
 ----
 
 This is the payment information for your keyholder membership at Helsinki Hacklab ry. Yearly membership fees are handled
-separately, with different reference and different account.
+separately, with different reference.
 
-Virtual barcode (usable with Finnish banks) contains all the information required to make a payment and is 
+Virtual barcode (usable with Finnish banks) contains all the information required to make a payment and is
 the recommended way to input the payment information. Remember to make the payment repeat monthly. In the netbank there
 should be "read barcode" (or similar) button, copy the barcode numbers to the dialog given after clicking the button.
 
@@ -231,34 +222,79 @@ This payment information is valid until further notice, you will be sent notific
 
         return True
 
-    def make_membershipfee_invoice(self, rt, t):
-        logger.warning('Holvi MFA enforcement broke this, not even trying to avoid execption')
-        return False  # FIXME when we have figured out a solution implement it.
+    def send_membershipfee_email(self, rt, t):
+        if not t.stamp:
+            t.stamp = datetime.datetime.now() + datetime.timedelta(weeks=2)
+        year = t.stamp.year
+        t.reference = get_nordea_yearly_payment_reference(t.owner.member_id, int(t.tag.tmatch), year)
 
-        if env.bool('HHL_SKIP_HOLVI', False):
-            return True
-        HOLVI_CNC = get_holvi_connection()
-        if not HOLVI_CNC:
-            return True
+        iban = env('NORDEA_BARCODE_IBAN')
+        member = t.owner
+        mail = EmailMessage()
+        mail.to = [member.email, ]
+        mail.from_email = "hallitus@helsinki.hacklab.fi"
+        mail.subject = "Helsinki Hacklab ry vuoden {year} jäsenyyden maksutiedot | Membership payment info for year {year}".format(year=year)
+        mail.body = """
+(In English below)
 
-        invoice_api = holvirc.InvoiceAPI(HOLVI_CNC)
-        invoice = holvirc.Invoice(invoice_api)
-        invoice.receiver = holvirc.InvoiceContact({
-            'email': t.owner.email,
-            'name': t.owner.name,
-        })
-        invoice.items.append(holvirc.InvoiceItem(invoice))
-        if t.stamp:
-            year = t.stamp.year
-        else:
-            year = datetime.datetime.now().year
-        invoice.items[0].description = "%s for %s" % (t.tag.label, year)
-        invoice.items[0].net = -t.amount  # Negative amount transaction -> positive amount invoice
-        invoice.items[0].category = self.category_maps[1]
-        invoice.subject = "%s / %s" % (invoice.items[0].description, invoice.receiver.name)
-        invoice = invoice.save()
-        invoice.send()
-        t.reference = invoice.rf_reference
+Tässä vuoden {year} jäsenmaksun maksutietosi Helsinki Hacklab ry:lle. Avainmaksut ovat eri asia ja maksetaan eri viitteellä.
+
+Virtuaaliviivakoodi sisältää kaikki maksua koskevat tiedot, ja se on suositeltavin tapa syöttää maksutiedot oikein
+verkkopankkiisi. Verkkopankissa on jossain "lue viivakoodi" -tyyppinen nappi,
+paina siitä ja kopioi viivakoodin numerosarja annettuun kenttään.
+
+Virtuaaliviivakoodisi:
+{barcode}
+
+
+Maksaminen manuaalisesti tiedot syöttämällä.
+
+Ole huolellinen maksutietojen syöttämisessä, jos et käytä virtuaaliviivakoodia. Yhdistyksellä on kaksi eri tilinumeroa.
+Ole hyvä, ja varmista, että maksut siirtyvät Nordea-tilillemme viitteen kanssa. Jätä maksun viestikenttä tyhjäksi.
+
+Tilinumero: {iban}
+Viitenumerosi: {ref}
+Maksun summa: {sum}EUR
+Eräpäivä: {duedate}
+
+Nämä maksutiedot ovat toistaiseksi voimassa ja niitä koskevat muutokset ilmoitetaan erikseen.
+
+----
+
+This is the payment information for your membership at Helsinki Hacklab ry for year {year}. Keyholder membership fees are handled
+separately, with different reference.
+
+Virtual barcode (usable with Finnish banks) contains all the information required to make a payment and is
+the recommended way to input the payment information. Remember to make the payment repeat monthly. In the netbank there
+should be "read barcode" (or similar) button, copy the barcode numbers to the dialog given after clicking the button.
+
+Virtual barcode:
+{barcode}
+
+Manual input of payment information.
+
+Pay extra attention when entering payment info manually. Helsinki Hacklab has two different accounts, please make sure
+you are using our Nordea account and the correct reference number. Leave the message-field empty.
+
+Account number: {iban}
+Reference number: {ref}
+Amount due: {sum}EUR
+Due date: {duedate}
+
+This payment information is valid until further notice, you will be sent notification of changes.
+        """.format(
+            iban=iban,
+            ref=t.reference,
+            sum=-t.amount,
+            barcode=bank_barcode(iban, t.reference, -t.amount),
+            year=year,
+            duedate=t.stamp.date().isoformat()
+        )
+        try:
+            mail.send()
+        except Exception as e:
+            logger.exception("Failed to send payment-info email to {}".format(member.email))
+
         return True
 
 
