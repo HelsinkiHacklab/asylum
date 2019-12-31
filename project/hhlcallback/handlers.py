@@ -224,7 +224,8 @@ This payment information is valid until further notice, you will be sent notific
 
     def send_membershipfee_email(self, rt, t):
         if not t.stamp:
-            t.stamp = datetime.datetime.now() + datetime.timedelta(weeks=2)
+            t.stamp = datetime.datetime.now()
+        duedate = t.stamp + datetime.timedelta(weeks=2)
         year = t.stamp.year
         t.reference = get_nordea_yearly_payment_reference(t.owner.member_id, int(t.tag.tmatch), year)
 
@@ -257,8 +258,6 @@ Viitenumerosi: {ref}
 Maksun summa: {sum}EUR
 Eräpäivä: {duedate}
 
-Nämä maksutiedot ovat toistaiseksi voimassa ja niitä koskevat muutokset ilmoitetaan erikseen.
-
 ----
 
 This is the payment information for your membership at Helsinki Hacklab ry for year {year}. Keyholder membership fees are handled
@@ -281,14 +280,13 @@ Reference number: {ref}
 Amount due: {sum}EUR
 Due date: {duedate}
 
-This payment information is valid until further notice, you will be sent notification of changes.
         """.format(
             iban=iban,
             ref=t.reference,
             sum=-t.amount,
             barcode=bank_barcode(iban, t.reference, -t.amount),
             year=year,
-            duedate=t.stamp.date().isoformat()
+            duedate=duedate.date().isoformat()
         )
         try:
             mail.send()
