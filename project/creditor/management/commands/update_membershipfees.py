@@ -19,6 +19,17 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         cutoff_dt = dateutil.parser.parse(options['cutoffdate'])
         end_dt = cutoff_dt - datetime.timedelta(minutes=1)
+
+        # Some sanity checks
+        if options['oldamount'] > 0:
+            print("WARNING: You probably meant to use negative amount")
+        if options['oldamount'] < 0 and options['newamount'] > 0:
+            print("ERROR: Old amount is negative and new is positive, this cannot be right")
+            return False
+        if options['oldamount'] > 0 and options['newamount'] < 0:
+            print("ERROR: Old amount is positive and new is negative, this cannot be right")
+            return False
+
         tgt_tag = TransactionTag.objects.get(label='Membership fee', tmatch='1')
         for rt in RecurringTransaction.objects.filter(
             rtype=RecurringTransaction.YEARLY,
