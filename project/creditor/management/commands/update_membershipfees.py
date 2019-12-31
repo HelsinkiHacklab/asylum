@@ -43,3 +43,14 @@ class Command(BaseCommand):
             newrt = MembershipfeeFactory.create(amount=options['newamount'], start=cutoff_dt, end=None, owner=rt.owner)
             if options['verbosity'] > 0:
                 print("Generated RecurringTransaction %s" % newrt)
+        for rt in RecurringTransaction.objects.filter(
+            rtype=RecurringTransaction.YEARLY,
+            tag=tgt_tag,
+            end=None,
+            start=cutoff_dt,
+            amount=options['oldamount']
+        ):
+            rt.amount = options['newamount']
+            rt.save()
+            if options['verbosity'] > 0:
+                print("Updated RecurringTransaction %s" % rt)
