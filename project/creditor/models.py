@@ -101,11 +101,11 @@ class RecurringTransaction(AsylumModel):
             start = datetime.datetime(timescope.year, 1, 1)
             end = datetime.datetime(start.year, 12, calendar.monthrange(start.year, 12)[1])
         elif self.rtype == RecurringTransaction.QUARTERLY:
-            if timescope.month in range(1,4):
+            if timescope.month in range(1, 4):
                 start = datetime.datetime(timescope.year, 1, 1)
-            elif timescope.month in range(4,7):
+            elif timescope.month in range(4, 7):
                 start = datetime.datetime(timescope.year, 4, 1)
-            elif timescope.month in range(7,10):
+            elif timescope.month in range(7, 10):
                 start = datetime.datetime(timescope.year, 7, 1)
             else:
                 start = datetime.datetime(timescope.year, 10, 1)

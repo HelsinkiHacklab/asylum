@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import rest_framework_filters as filters
 from django.db import models
-from rest_framework import serializers, viewsets, views, response
+from rest_framework import response, serializers, views, viewsets
 
 from .models import Member, MembershipApplication, MembershipApplicationTag, MemberType
 
