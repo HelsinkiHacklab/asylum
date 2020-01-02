@@ -241,8 +241,7 @@ This payment information is valid until further notice, you will be sent notific
 Tässä vuoden {year} jäsenmaksun maksutietosi Helsinki Hacklab ry:lle. Avainmaksut ovat eri asia ja maksetaan eri viitteellä.
 
 Virtuaaliviivakoodi sisältää kaikki maksua koskevat tiedot, ja se on suositeltavin tapa syöttää maksutiedot oikein
-verkkopankkiisi. Verkkopankissa on jossain "lue viivakoodi" -tyyppinen nappi,
-paina siitä ja kopioi viivakoodin numerosarja annettuun kenttään.
+verkkopankkiisi. Verkkopankissa on jossain "lue viivakoodi" -tyyppinen nappi, paina siitä ja kopioi viivakoodin numerosarja annettuun kenttään.
 
 Virtuaaliviivakoodisi:
 {barcode}
@@ -264,8 +263,8 @@ This is the payment information for your membership at Helsinki Hacklab ry for y
 separately, with different reference.
 
 Virtual barcode (usable with Finnish banks) contains all the information required to make a payment and is
-the recommended way to input the payment information. Remember to make the payment repeat monthly. In the netbank there
-should be "read barcode" (or similar) button, copy the barcode numbers to the dialog given after clicking the button.
+the recommended way to input the payment information. In the netbank there should be "read barcode" (or similar) button,
+copy the barcode numbers to the dialog given after clicking the button.
 
 Virtual barcode:
 {barcode}
