@@ -135,6 +135,8 @@ class RecurringTransactionsHolviHandler(BaseRecurringTransactionsHandler):
         # Only negative amounts go to invoices
         if t.amount >= 0.0:
             return True
+        # Use our "standard" reference number scheme always by default, this may be overridden later
+        t.reference = get_nordea_payment_reference(t.owner.member_id, int(t.tag.tmatch))
         if int(t.tag.tmatch) == 1:  # Membership feee
             return self.send_membershipfee_email(rt, t)
         if int(t.tag.tmatch) == 2:  # Keyholder feee
